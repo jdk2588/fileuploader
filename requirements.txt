@@ -1,4 +1,5 @@
-tornado
+tornado==4.1
 boto
 python-magic
 filechunkio
+mongoengine==0.11

@@ -5,14 +5,14 @@ import tornado.web
 import tornado.gen
 
 from tornado.concurrent import run_on_executor
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 from handlers.base import BaseHandler
 from logic.uploadfile import UploadFile
 
 class UploadHandler(BaseHandler):
 
-    executor = ProcessPoolExecutor(max_workers=2)
+    executor = ThreadPoolExecutor(max_workers=2)
 
     @run_on_executor
     def background_task(self, obj):

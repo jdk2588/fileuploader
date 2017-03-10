@@ -1,7 +1,7 @@
 from documents.con import dbcon
 
 from datetime import datetime
-from mongoengine import Document, StringField, DateTimeField
+from mongoengine import Document, StringField, DateTimeField, BooleanField
 
 class UploadedFiles(Document):
     token = StringField()
@@ -10,6 +10,7 @@ class UploadedFiles(Document):
     contenttype = StringField()
     created_on = DateTimeField()
     modified_on = DateTimeField()
+    is_uploaded = BooleanField(default=False)
 
     meta = {
         'collection': 'uploadedfiles',

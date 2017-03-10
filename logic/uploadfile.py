@@ -3,6 +3,8 @@ import math
 import settings
 
 import logging
+import multiprocessing
+
 from filechunkio import FileChunkIO
 from utils import tokengen, S3Connection, guess_mime_type
 
@@ -13,7 +15,7 @@ from boto.s3.key import Key
 MIN_CHUNK_SIZE = 5242880
 
 def progress(done, size):
-    logging.info("Uploading done: [%s KB] of ~ [%s KB]" % (don/1024, size/1024))
+    logging.info("Uploading done: [%s KB] of ~ [%s KB]" % (done/1024, size/1024))
 
 
 class UploadFile():
@@ -77,11 +79,16 @@ class UploadFile():
         obj = UploadedFiles(**_data)
         obj.save()
 
+        self.file_mongo_obj = obj
+
         return self.filename
 
     def delete_entry(self):
-        _file = UploadedFiles.objects.get(token=self.token)
-        _file.delete()
+        self.file_mongo_obj.delete()
+
+    def update_entry(self):
+        self.file_mongo_obj.is_uploaded = True
+        self.file_mongo_obj.save()
 
     def single_file(self):
         try:
@@ -102,34 +109,66 @@ class UploadFile():
             raise Exception("There was some problem in uploading")
 
 
-    def multipart_file_big(self):
+    def upload_part(self, mpart_id, part_num, offset, _bytes):
+
+        retries = 5
         try:
-            multi_part = self.s3_conn.bucket.initiate_multipart_upload(
-                os.path.basename(self.get_file_path),
-                headers=self.get_headers,
-                metadata=self.get_headers
-            )
+            for everypart in self.s3_conn.bucket.get_all_multipart_uploads():
+                if everypart.id == mpart_id:
+                    with FileChunkIO(self.get_file_path, 'r', offset=offset,
+                                 bytes=_bytes) as _fpart:
 
-            chunk_size = MIN_CHUNK_SIZE
-            chunk_count = int(math.ceil(self.file_size / float(chunk_size)))
+                         logging.info("Uploading part %s", part_num)
+                         everypart.upload_part_from_file(
+                             _fpart, part_num=part_num,
+                             cb=progress
+                         )
 
-            for i in range(chunk_count):
-                offset = chunk_size * i
-                _bytes = min(chunk_size, self.file_size - offset)
-                with FileChunkIO(self.get_file_path, 'r', offset=offset,
-                             bytes=_bytes) as _fpart:
-                     multi_part.upload_part_from_file(
-                         _fpart, part_num=i + 1,
-                         cb=progress
-                     )
+                    break
 
+        except Exception as e:
+            if retries:
+                retries -= 1
+                self.upload_part(mpart_id, part_num, offset, _bytes)
+                logging.warning("%s part failed for %s" % part_num,
+                                self.get_file_path)
+            else:
+                raise e
+
+
+    def multipart_file_big(self):
+        multi_part = self.s3_conn.bucket.initiate_multipart_upload(
+            os.path.basename(self.get_file_path),
+            headers=self.get_headers,
+            metadata=self.get_headers
+        )
+
+        chunk_size = MIN_CHUNK_SIZE
+        bytes_per_chunk = max(int(math.sqrt(MIN_CHUNK_SIZE) *
+                                  math.sqrt(self.file_size)), MIN_CHUNK_SIZE)
+
+        chunk_count = int(math.ceil(self.file_size / float(chunk_size)))
+
+        pool = multiprocessing.Pool(processes=4)
+
+        for _chu in range(chunk_count):
+            offset = bytes_per_chunk * _chu
+            _bytes = min(chunk_size, self.file_size - offset)
+
+            pool.apply_async(self.upload_part, [multi_part.id, _chu+1,
+                                           offset, _bytes])
+
+        pool.close()
+        pool.join()
+
+        if len(multi_part.get_all_parts()) == chunk_count:
             multi_part.complete_upload()
-
-        except:
+            self.update_entry()
+        else:
             multi_part.cancel_upload()
             self.delete_entry()
-
             raise Exception("There was some problem in uploading")
+
 
     def upload_to_s3(self):
         #Save to the file first

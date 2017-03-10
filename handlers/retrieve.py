@@ -8,7 +8,6 @@ from logic.getfile import GetFile
 
 class RetrieveHandler(BaseHandler):
 
-    @tornado.web.asynchronous
     @tornado.gen.engine
     def get(self, token):
         retobj = GetFile(token)
