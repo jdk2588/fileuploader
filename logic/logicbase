@@ -1,0 +1,55 @@
+#!/usr/bin/python
+# Author <Jaideep Khandelwal jdk2588@gmail.com>
+
+from orm.crux.dbconn import model_classes
+
+logic_classes = []
+
+class MetaClass(type):
+
+    def __init__(cls, clsname, base, attrs):
+        if clsname != "LogicBase":
+            logic_classes.append(cls)
+
+        class Qbject(object):
+            pass
+
+        setattr(cls, "orm", Qbject())
+
+        for _each in model_classes:
+            setattr(cls.orm, _each.__name__, _each)
+
+
+class LogicBase(object):
+    __metaclass__ = MetaClass
+
+class LogicProxy(object):
+    def __init__(self):
+        self.registry = {}
+
+    def register(self):
+        import ipdb; ipdb.set_trace()
+        for _each in self.registry:
+            setattr(self, _each, self.registry[_each])
+
+class LogicInterface(object):
+    instance = None
+
+    def __new__(cls):
+        if not LogicInterface.instance:
+            obj = LogicProxy()
+
+            for _each in logic_classes:
+                obj.registry.update({
+                    _each.__name__.lower(): _each
+                })
+
+            LogicInterface.instance = obj
+
+        return LogicInterface.instance
+
+import ipdb; ipdb.set_trace()
+logic = LogicInterface()
+logic.register()
+
+

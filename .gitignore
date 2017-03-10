@@ -1,0 +1,6 @@
+__pycache__
+*.pyc
+orm/*
+local_settings.py
+tempstore
+test_server.py
