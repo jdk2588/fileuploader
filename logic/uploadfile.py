@@ -15,7 +15,7 @@ from boto.s3.key import Key
 MIN_CHUNK_SIZE = 5242880
 
 def progress(done, size):
-    logging.info("Uploading done: [%s KB] of ~ [%s KB]" % (done/1024, size/1024))
+    logging.info('%d KB transferred / %d KB total' % (done/1024, size/1024))
 
 
 class UploadFile():
@@ -109,9 +109,8 @@ class UploadFile():
             raise Exception("There was some problem in uploading")
 
 
-    def upload_part(self, mpart_id, part_num, offset, _bytes):
+    def upload_part(self, mpart_id, part_num, offset, _bytes, retries=2):
 
-        retries = 5
         try:
             for everypart in self.s3_conn.bucket.get_all_multipart_uploads():
                 if everypart.id == mpart_id:
@@ -129,7 +128,7 @@ class UploadFile():
         except Exception as e:
             if retries:
                 retries -= 1
-                self.upload_part(mpart_id, part_num, offset, _bytes)
+                self.upload_part(mpart_id, part_num, offset, _bytes, retries=retries)
                 logging.warning("%s part failed for %s" % part_num,
                                 self.get_file_path)
             else:
@@ -147,7 +146,7 @@ class UploadFile():
         bytes_per_chunk = max(int(math.sqrt(MIN_CHUNK_SIZE) *
                                   math.sqrt(self.file_size)), MIN_CHUNK_SIZE)
 
-        chunk_count = int(math.ceil(self.file_size / float(chunk_size)))
+        chunk_count = int(math.ceil(self.file_size / float(bytes_per_chunk)))
 
         pool = multiprocessing.Pool(processes=4)
 
