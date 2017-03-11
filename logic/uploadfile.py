@@ -85,7 +85,8 @@ class UploadFile():
         return self.filename
 
     def delete_entry(self):
-        self.file_mongo_obj.delete()
+        self.file_mongo_obj.upload_failed = True
+        self.file_mongo_obj.save()
 
     def update_entry(self):
         self.file_mongo_obj.is_uploaded = True

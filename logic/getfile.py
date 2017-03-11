@@ -15,17 +15,22 @@ class GetFile():
 
         #Check if the token corresponds to a valid file
         _file = UploadedFiles.objects.get(token=self.token)
-        if not _file:
-            return (False, "No such file exist")
 
-        #Ensure the file has been uploaded or present in S3 
-        cloudfileobj = self.s3_conn.bucket.get_key(self.token)
-        if not cloudfileobj:
-            return (False, "The file is still being uploaded")
+        is_uploaded = False
+        if not _file:
+            ret_obj = "No such file exist"
+        elif _file.upload_failed:
+            ret_obj = "Sorry! This file could not be uploaded"
+        elif not _file.is_uploaded:
+            ret_obj = "The file is still being uploaded"
         else:
-            ret = cloudfileobj.generate_url(
+            is_uploaded = True
+
+            #Ensure the file has been uploaded or present in S3
+            cloudfileobj = self.s3_conn.bucket.get_key(self.token)
+            ret_obj = cloudfileobj.generate_url(
                 settings.SIGNED_URL_EXPIRATION,
                 response_headers={"Content-Type": cloudfileobj.content_type}
             )
 
-            return (True, ret)
+        return (is_uploaded, ret_obj)
