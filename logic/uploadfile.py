@@ -11,6 +11,7 @@ from utils import tokengen, S3Connection, guess_mime_type
 from documents.files import UploadedFiles
 
 from boto.s3.key import Key
+import time
 
 MIN_CHUNK_SIZE = 5242880
 
@@ -173,6 +174,7 @@ class UploadFile():
         #Save to the file first
         #TODO:Try to stream directly
 
+        t1 = time.time()
         self.save_to_file()
 
         #Based on file size decide, to use multipart or upload in once
@@ -183,4 +185,6 @@ class UploadFile():
             _uload_func = self.multipart_file_big
 
         _uload_func()
+        t2 = time.time()
+        logging.info("Time taken for file %s is %s", self.filename, t2-t1)
         return self.filename
