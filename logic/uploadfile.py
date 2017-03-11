@@ -4,6 +4,7 @@ import settings
 
 import logging
 import multiprocessing
+import asyncio
 
 from filechunkio import FileChunkIO
 from utils import tokengen, S3Connection, guess_mime_type
@@ -135,6 +136,13 @@ class UploadFile():
                 raise e
 
 
+    @asyncio.coroutine
+    def work_queue(self, task, queue):
+        while not queue.empty():
+            queue_item = yield from queue.get()
+            self.upload_part(*queue_item)
+            yield from asyncio.sleep(2)
+
     def multipart_file_big(self):
         multi_part = self.s3_conn.bucket.initiate_multipart_upload(
             os.path.basename(self.get_file_path),
@@ -148,17 +156,28 @@ class UploadFile():
 
         chunk_count = int(math.ceil(self.file_size / float(bytes_per_chunk)))
 
-        pool = multiprocessing.Pool(processes=4)
+ #       pool = multiprocessing.Pool(processes=4)
+
+        import ipdb; ipdb.set_trace()
+        queue = asyncio.Queue()
+        loop = asyncio.get_event_loop()
 
         for _chu in range(chunk_count):
             offset = bytes_per_chunk * _chu
             _bytes = min(chunk_size, self.file_size - offset)
 
-            pool.apply_async(self.upload_part, [multi_part.id, _chu+1,
-                                           offset, _bytes])
+            queue.put_nowait([multi_part.id, _chu+1, offset, _bytes])
 
-        pool.close()
-        pool.join()
+        tasks = []
+        for i in range(chunk_count):
+            tasks.append(asyncio.async(self.work_queue('part%s' % i, queue)))
+
+            #pool.apply_async(self.upload_part, )
+
+        loop.run_until_complete(asyncio.wait(tasks))
+        loop.close()
+        #pool.close()
+        #pool.join()
 
         if len(multi_part.get_all_parts()) == chunk_count:
             multi_part.complete_upload()

@@ -1,6 +1,8 @@
 #!/usr/bin/python3.5
 # Author <Jaideep Khandelwal jdk2588@gmail.com>
 
+import asyncio
+
 import tornado.web
 import tornado.gen
 
@@ -14,7 +16,7 @@ class UploadHandler(BaseHandler):
 
     executor = ThreadPoolExecutor(max_workers=2)
 
-    @run_on_executor
+    #@run_on_executor
     def background_task(self, obj):
         return obj.upload_to_s3()
 
@@ -26,6 +28,7 @@ class UploadHandler(BaseHandler):
         )
 
         ret = obj.write_entry()
-        self.write_json(data={"token": ret})
-        yield self.background_task(obj)
 
+        self.background_task(obj)
+
+        self.write_json(data={"token": ret})
