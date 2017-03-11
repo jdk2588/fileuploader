@@ -11,6 +11,7 @@ class UploadedFiles(Document):
     created_on = DateTimeField()
     modified_on = DateTimeField()
     is_uploaded = BooleanField(default=False)
+    upload_failed = BooleanField(default=False)
 
     meta = {
         'collection': 'uploadedfiles',
