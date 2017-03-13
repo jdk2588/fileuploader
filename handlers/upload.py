@@ -10,6 +10,7 @@ from tornado.concurrent import run_on_executor
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 import settings
+
 from handlers.base import BaseHandler
 from logic.uploadfile import UploadFile
 
@@ -19,9 +20,12 @@ class UploadHandler(BaseHandler):
 
     executor = ThreadPoolExecutor(max_workers=settings.THREAD_WORKERS)
 
-    def prepare(self):
+    def prepare(self, *args, **kwargs):
 
+        #Queue to take chunks of data received'''
         self.queue = Queue()
+
+        #Change the size of body
         if self.request.method.lower() == "post":
             self.request.connection.set_max_body_size(settings.MAX_STREAMED_SIZE)
 
@@ -32,11 +36,15 @@ class UploadHandler(BaseHandler):
         except KeyError:
             self.content_length = 0
 
+        super(UploadHandler, self)._execute(*args, **kwargs)
+
     @tornado.gen.coroutine
     def data_received(self, chunk):
+        #Put chunks in a queue as received'''
         yield self.queue.put(chunk)
 
 
+    #Upload to S3, with Threaded Pool
     @run_on_executor(executor='executor')
     def background_task(self, obj):
         return obj.upload_to_s3(self.queue)

@@ -1,8 +1,12 @@
 #!/usr/bin/python3.5
 # Author <Jaideep Khandelwal jdk2588@gmail.com>
 
+import json
 import settings
 import tornado.web
+
+class CustomException(tornado.web.HTTPError):
+    pass
 
 class BaseHandler(tornado.web.RequestHandler):
 
@@ -37,12 +41,15 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json; charset=UTF-8")
         self.write(ret)
 
+    def write_error(self, status_code, **kwargs):
+        self.set_header('Content-Type', 'application/json')
+        self.finish(json.dumps({
+                'code': status_code,
+                'error': {
+                    'reason': self._reason
+                }
+            }))
+
     def write(self, *args, **kwargs):
         super(BaseHandler, self).write(*args, **kwargs)
         self.finish()
-
-    def get(self):
-        raise NotImplementedError
-
-    def post(self):
-        raise NotImplementedError

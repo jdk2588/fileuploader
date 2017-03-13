@@ -6,6 +6,8 @@ class MongoCon(object):
 
     @classmethod
     def get_connection(cls):
+
+        #Create the connection to database
         if not cls.isconn:
             connect(settings.MONGODB_NAME,
                     username=settings.MONGODB_USER,

@@ -129,7 +129,9 @@ class UploadFile():
         except Exception as e:
             if retries:
                 retries -= 1
-                self.upload_part(mpart_id, part_num, offset, _bytes, retries=retries)
+                self.upload_part(
+                    mpart_id, part_num, offset, _bytes, retries=retries)
+
                 logging.warning("%s part failed for %s" % part_num,
                                 self.get_file_path)
             else:
@@ -153,7 +155,7 @@ class UploadFile():
         self.multi_part.cancel_upload()
         self.delete_entry()
 
-    def queue_file_write(self, data):
+    def process_chunk_write(self, data):
         _temp = self.filename + str(time.time())
         _file = open(_temp, "wb+")
         _file.write(data)
@@ -212,7 +214,7 @@ class UploadFile():
             if self.content_length > 0:
                 self.content_length -= MIN_CHUNK_SIZE
 
-            self.queue_file_write(data)
+            self.process_chunk_write(data)
 
 
     def pick_via_queue(self, queue):
@@ -231,8 +233,11 @@ class UploadFile():
     def upload_to_s3(self, queue=None):
         #Save to the file first
         #TODO:Try to put stream directly
+
         '''Using queue preferred, to put streams of data else use multiprocess for,
-        big file in different parts or upload in once'''
+        big file in different parts or upload in once, though problem with multipr-
+        ocess is too many processes spawn, though Threading will have GIL issue,
+        better way could be to have a task queue manager like Celery'''
 
         logging.info("Processing file %s", self.filename)
         if queue:

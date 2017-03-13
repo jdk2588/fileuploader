@@ -1,4 +1,4 @@
-tornado==4.1
+tornado==4.2
 boto
 python-magic
 filechunkio
