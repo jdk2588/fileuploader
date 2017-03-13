@@ -1,1 +1,1 @@
-nosetests --nocapture --cover-package=tests
+nosetests -v --cover-package=tests
