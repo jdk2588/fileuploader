@@ -11,9 +11,11 @@ class RetrieveHandler(BaseHandler):
     @tornado.gen.engine
     def get(self, token):
         retobj = GetFile(token)
-        redirect, url = retobj.generate_signed_url()
+        _data = retobj.generate_signed_url()
 
-        if redirect:
-            self.redirect(url)
+        #If redirect url present then redirect
+        if _data.get("redirect_url"):
+            self.set_header("Content-Type", "%s" % _data['content_type'])
+            self.redirect(_data.get("redirect_url"))
         else:
-            self.write_json({"data": url})
+            self.write_json(**{"data": _data, "message": _data["message"]})

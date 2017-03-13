@@ -18,7 +18,6 @@ from urls import urls
 from tornado.log import app_log as logging
 
 
-
 class App(tornado.web.Application):
     def listen(self, port, address='', **kwargs):
         self.port = port
@@ -33,6 +32,8 @@ def main():
     application = App(urls, transforms=None)
     http_server = tornado.httpserver.HTTPServer(
         application,
+        max_buffer_size=settings.MAX_BUFFER_SIZE,
+        max_body_size=settings.MAX_BODY_SIZE,
         no_keep_alive=True, xheaders=True)
 
     http_server.bind(settings.APP_PORT, settings.APP_HOST)

@@ -1,6 +1,3 @@
-APP_HOST=""
-APP_PORT=""
-
 APP_HOST="127.0.0.1"
 APP_PORT="8888"
 
@@ -12,8 +9,22 @@ AWS_SECRET_ACCESS=""
 AUTH_HEADER_VAL=""
 
 LOCAL_STORAGE_DIR="tempstore"
+THREAD_WORKERS=4
 
 DB_SETTINGS = {}
+
+MB = 1024 * 1024
+GB = 1024 * MB
+TB = 1024 * GB
+
+MAX_BUFFER_SIZE = 4 * MB
+MAX_BODY_SIZE = 4 * MB
+MAX_STREAMED_SIZE = 1 * TB
+
+MONGODB_USER = ""
+MONGODB_PASS = ""
+MONGODB_NAME = "filedetails"
+MONGODB_HOST = "127.0.0.1:27017"
 
 try:
     from local_settings import *

@@ -1,7 +1,7 @@
 from documents.con import dbcon
 
 from datetime import datetime
-from mongoengine import Document, StringField, DateTimeField, BooleanField
+from mongoengine import Document, StringField, DateTimeField, BooleanField, DoesNotExist
 
 class UploadedFiles(Document):
     token = StringField()
@@ -15,6 +15,7 @@ class UploadedFiles(Document):
 
     meta = {
         'collection': 'uploadedfiles',
+        'indexes': ['token']
     }
 
     def get_object(self):
