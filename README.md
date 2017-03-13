@@ -18,7 +18,10 @@ Requirements:
     pip install -r requirements.txt
 
 To run:
-    Add values in the settings.py, AWS credentials, MongoDB credentials
+    Add values in the settings.py
+
+        AWS credentials
+        MongoDB credentials
 
 Test cases are in:
      tests/
