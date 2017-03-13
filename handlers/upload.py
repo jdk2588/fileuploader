@@ -60,4 +60,3 @@ class UploadHandler(BaseHandler):
         ret = obj.write_entry()
         self.write_json(data={"token": ret})
         yield self.background_task(obj)
-
