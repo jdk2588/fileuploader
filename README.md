@@ -15,19 +15,13 @@ Requirements:
 
     python 2.7/3.0+
 
-    install using
-        ```
-        pip install -r requirements.txt
-        ```
+    pip install -r requirements.txt
 
 Test cases are in:
      tests/
-
-    ``` cd tests
-
-        sh tests.sh
-
-    ```
+     
+    cd tests
+    sh tests.sh
 
 Notes:
 
@@ -39,6 +33,6 @@ This is written using tornado=4.2.
 
 Currently ThreadPool is used to run different uploads on seperate threads, instead of
 processes. Threads have the GIL issue on the other hand, processes are not preferred
-because multiple uploads will spawn multiple processes.
+because multiple uploads will spawn multiple processes. 
 
 Good way is to implement a Task Queue processor like Celery
