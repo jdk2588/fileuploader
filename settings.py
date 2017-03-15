@@ -1,3 +1,5 @@
+import logging
+
 APP_HOST="127.0.0.1"
 APP_PORT="8888"
 
@@ -31,4 +33,4 @@ MONGODB_HOST = "127.0.0.1:27017"
 try:
     from local_settings import *
 except:
-    print("No local settings found")
+    logging.warning("No local settings found")
