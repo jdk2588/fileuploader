@@ -36,7 +36,7 @@ class UploadHandler(BaseHandler):
         except KeyError:
             self.content_length = 0
 
-        super(UploadHandler, self)._execute(*args, **kwargs)
+        super(UploadHandler, self).prepare(*args, **kwargs)
 
     @tornado.gen.coroutine
     def data_received(self, chunk):

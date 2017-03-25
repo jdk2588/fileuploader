@@ -18,7 +18,7 @@ class BaseHandler(tornado.web.RequestHandler):
        # if not _auth or _auth != settings.AUTH_HEADER_VAL:
        #     raise Exception("Client not authorized to make request")
 
-        super(BaseHandler, self)._execute(*args, **kwargs)
+        super(BaseHandler, self).prepare(*args, **kwargs)
 
     def _execute(self, *args, **kwargs):
 
